@@ -1,0 +1,2 @@
+devlopmentChains = ['hardhat', 'localhost'];
+

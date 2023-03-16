@@ -1,0 +1,38 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Photograph.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.7;\n\n//https://images.unsplash.com/photo-1566275529824-cca6d008f3da?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NXx8cGhvdG98ZW58MHx8MHx8&w=1000&q=80\n\nerror Photograph__notOwner();\n\nerror Photograph__buyPhotograph();\n\ncontract Photograph {\n    string private i_title;\n    string private i_description;\n    string private i_photoUri;\n    address private s_owner;\n    uint256 private s_price;\n    address private i_contributor;\n    bool private s_imageState;\n    uint256 private i_royalty;\n\n    mapping(address => uint256) public ownerToPrice;\n\n    constructor(\n        string memory title,\n        string memory description,\n        string memory photoLinks,\n        uint256 price,\n        address sender,\n        uint256 royalty\n    ) {\n        i_title = title;\n        i_description = description;\n        i_photoUri = photoLinks;\n        s_owner = sender;\n        s_price = price;\n        i_contributor = sender;\n        s_imageState = false;\n        i_royalty = royalty;\n    }\n\n    //only user modifier\n\n    modifier onlyOwner() {\n        if (msg.sender != s_owner) {\n            revert Photograph__notOwner();\n        }\n        _;\n    }\n\n    //image state toggle\n\n    function setImageToggle(bool imageState) public onlyOwner {\n        s_imageState = imageState;\n    }\n\n    //image price set\n\n    function setPrice(uint256 updatedPrice) public onlyOwner {\n        s_price = updatedPrice;\n        ownerToPrice[msg.sender] = updatedPrice;\n    }\n\n    //image Buy\n\n    function buyPhotograph() public payable {\n        payable(i_contributor).transfer((msg.value * getRoyalty()) / 100);\n        payable(s_owner).transfer((msg.value * (100 - getRoyalty())) / 100);\n        s_owner = msg.sender;\n    }\n\n    //price getter\n\n    function getPrice() public view returns (uint256) {\n        return s_price;\n    }\n\n    //Owner getter\n\n    function getOwner() public view returns (address) {\n        return s_owner;\n    }\n\n    //photograph getter\n\n    function getPhoto() public view returns (string memory) {\n        return i_photoUri;\n    }\n\n    //get contributor\n\n    function getContributor() public view returns (address) {\n        return i_contributor;\n    }\n\n    //image state getter\n\n    function getImageState() public view returns (bool) {\n        return s_imageState;\n    }\n\n    //get royalty\n\n    function getRoyalty() public view returns (uint256) {\n        return i_royalty;\n    }\n\n    //get title\n\n    function getTitle() public view returns (string memory) {\n        return i_title;\n    }\n\n    // get description\n\n    function getDescription() public view returns (string memory) {\n        return i_description;\n    }\n}\n"
+    },
+    "contracts/PhotographFactory.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.7;\n\nimport \"./Photograph.sol\";\n\ncontract PhotographFactory {\n    uint256 tokenId;\n    Photograph public photograph;\n    Photograph[] public simplePhotographArray;\n    string[] public hashdata;\n    mapping(address => address) public contractToWallet;\n\n    //photograph contract creater\n\n    function createPhotographContract(\n        string memory title,\n        string memory description,\n        string memory imageURL,\n        uint256 money,\n        address senderAddress,\n        string memory hashData,\n        uint256 royalty\n    ) external returns (address) {\n        photograph = new Photograph(\n            title,\n            description,\n            imageURL,\n            money,\n            senderAddress,\n            royalty\n        );\n        simplePhotographArray.push(photograph);\n        hashdata.push(hashData);\n        contractToWallet[address(photograph)] = senderAddress;\n        return address(photograph);\n    }\n\n    //image hash store getter\n\n    function viewHashData() public view returns (string[] memory) {\n        return hashdata;\n    }\n\n    //allphotograph addresses\n\n    function getPhotographAddresses() public view returns (address[] memory) {\n        address[] memory result = new address[](simplePhotographArray.length);\n        for (uint i = 0; i < simplePhotographArray.length; i++) {\n            result[i] = address(simplePhotographArray[i]);\n        }\n        return result;\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
